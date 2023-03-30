@@ -1,0 +1,33 @@
+name: Build, package and release clang+llvm
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: macos-12
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone repository
+      - name: Build
+        id: bake
+        run: ./build.sh
+      - name: Upload Tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.bake.outputs.file_name }}
+          path: ./output/${{ steps.bake.outputs.file_name }}
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.bake.outputs.release_tag_version }}
+          release_name: LLVM ${{ steps.bake.outputs.release_tag_version }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ./output/${{ steps.bake.outputs.file_name }}
