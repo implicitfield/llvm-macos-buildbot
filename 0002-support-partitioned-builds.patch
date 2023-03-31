@@ -1,0 +1,84 @@
+--- a/test-release.sh
++++ b/test-release.sh
+@@ -46,6 +46,7 @@ BuildDir="`pwd`"
+ ExtraConfigureFlags=""
+ ExportBranch=""
+ git_ref=""
++Stages="all"
+ 
+ do_bolt="no"
+ if [ "$System" = "Linux" ]; then
+@@ -200,6 +201,20 @@ while [ $# -gt 0 ]; do
+         -silent-log )
+             do_silent_log="yes"
+             ;;
++        -stage1 )
++            [ $Stages != "all" ] && echo 'Chaining stages is not supported' && exit 1
++            Stages="stage1"
++            do_test_suite="no"
++            ;;
++        -stage2 )
++            [ $Stages != "all" ] && echo 'Chaining stages is not supported' && exit 1
++            Stages="stage2"
++            do_test_suite="no"
++            ;;
++        -stage3 )
++            [ $Stages != "all" ] && echo 'Chaining stages is not supported' && exit 1
++            Stages="stage3"
++            ;;
+         -help | --help | -h | --h | -\? )
+             usage
+             exit 0
+@@ -585,6 +600,7 @@ for Flavor in $Flavors ; do
+     echo "********************************************************************************"
+     echo "  Release:     $Release-$RC"
+     echo "  Build:       $Flavor"
++    echo "  Stage:       $Stages"
+     echo "  System Info: "
+     echo "    `uname -a`"
+     echo "********************************************************************************"
+@@ -603,6 +619,7 @@ for Flavor in $Flavors ; do
+     llvmCore_phase3_objdir=$BuildDir/Phase3/$Flavor/llvmCore-$Release-$RC.obj
+     llvmCore_phase3_destdir=$BuildDir/Phase3/$Flavor/llvmCore-$Release-$RC.install
+ 
++    if [ "$Stages" = "all" ] || [ "$Stages" = "stage1" ]; then
+     rm -rf $llvmCore_phase1_objdir
+     rm -rf $llvmCore_phase1_destdir
+ 
+@@ -628,7 +645,13 @@ for Flavor in $Flavors ; do
+     build_llvmCore 1 $Flavor \
+         $llvmCore_phase1_objdir $llvmCore_phase1_destdir
+     clean_RPATH $llvmCore_phase1_destdir/usr/local
++    fi
+ 
++    if [ "$Stages" = "stage1" ]; then
++        exit 0
++    fi
++
++    if [ "$Stages" = "all" ] || [ "$Stages" = "stage2" ]; then
+     ########################################################################
+     # Phase 2: Build llvmCore with newly built clang from phase 1.
+     c_compiler=$llvmCore_phase1_destdir/usr/local/bin/clang
+@@ -638,6 +661,11 @@ for Flavor in $Flavors ; do
+     build_llvmCore 2 $Flavor \
+         $llvmCore_phase2_objdir $llvmCore_phase2_destdir
+     clean_RPATH $llvmCore_phase2_destdir/usr/local
++    fi
++
++    if [ "$Stages" = "stage2" ]; then
++        exit 0
++    fi
+ 
+     ########################################################################
+     # Phase 3: Build llvmCore with newly built clang from phase 2.
+@@ -672,6 +700,10 @@ done
+ 
+ ) 2>&1 | tee $LogDir/testing.$Release-$RC.log
+ 
++if [ "$Stages" != "stage3" ] && [ "$Stages" != "all" ]; then
++    exit 0
++fi
++
+ if [ "$use_gzip" = "yes" ]; then
+   echo "# Packaging the release as $Package.tar.gz"
+ else
