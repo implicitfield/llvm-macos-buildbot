@@ -10,7 +10,7 @@ if [ "$1" != "stage3" ]; then
     tar -cf build_directory.tar final
     exit 0
 fi
-echo "{file_name}={clang+llvm-16.0.0-x86-64-apple-darwin21.0.tar.gz}" >> $GITHUB_STATE
-echo "{release_tag_version}={16.0.0}" >> $GITHUB_STATE
+echo "file_name=clang+llvm-16.0.0-x86-64-apple-darwin21.0.tar.gz" >> $GITHUB_OUTPUT
+echo "release_tag_version=16.0.0" >> $GITHUB_OUTPUT
 mkdir output
 mv final/clang+llvm-16.0.0-x86-64-apple-darwin21.0.tar.gz output/
