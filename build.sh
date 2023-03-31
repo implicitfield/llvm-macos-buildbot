@@ -5,7 +5,7 @@ fi
 cp final/llvm-project/llvm/utils/release/test-release.sh .
 patch -p1 < 0001-skip-tests.patch
 patch -p1 < 0002-support-partitioned-builds.patch
-./test-release.sh -release 16.0.0 -final -triple x86-64-apple-darwin21.0 -no-checkout -no-clang-tools -no-test-suite -no-openmp -no-polly -no-mlir -no-flang -use-gzip -"$1"
+./test-release.sh -release 16.0.0 -final -triple x86-64-apple-darwin21.0 -no-checkout -no-clang-tools -no-test-suite -no-openmp -no-polly -no-mlir -no-flang -use-gzip -no-compare-files -"$1"
 if [ "$1" != "stage3" ]; then
     tar -cf build_directory.tar final
     exit 0
