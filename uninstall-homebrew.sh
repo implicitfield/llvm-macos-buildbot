@@ -18,3 +18,6 @@ curl -O -L https://github.com/Kitware/CMake/releases/download/v"$CMAKE_RELEASE"/
 tar -xf cmake-"$CMAKE_RELEASE"-macos10.10-universal.tar.gz
 sudo cp -r cmake-"$CMAKE_RELEASE"-macos10.10-universal/CMake.app/Contents/bin/* /usr/local/bin/
 sudo cp -r cmake-"$CMAKE_RELEASE"-macos10.10-universal/CMake.app/Contents/share/* /usr/local/share/
+
+# Remove additional Python versions
+sudo rm -rf /Library/Frameworks/Python.framework
