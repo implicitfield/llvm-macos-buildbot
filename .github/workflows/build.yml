@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
       - name: Prepare for building
         run: ./initialize.sh
       - name: Build
@@ -34,6 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
       - name: Download build directory
         uses: actions/download-artifact@v3
         with:
@@ -54,6 +58,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
       - name: Download build directory
         uses: actions/download-artifact@v3
         with:
@@ -71,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.bake.outputs.release_tag_version }}
-          release_name: LLVM ${{ steps.bake.outputs.release_tag_version }}
+          body_path: ./github_release_text.txt
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}

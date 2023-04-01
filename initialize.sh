@@ -1,6 +1,7 @@
 #!/bin/sh
-[ ! -f llvm-project-16.0.0.src.tar.xz ] && curl -O -L https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.0/llvm-project-16.0.0.src.tar.xz
-[ "$(shasum -a 512 llvm-project-16.0.0.src.tar.xz)" != "$(cat checksum.txt)" ] && exit 1
+LLVM_RELEASE="$(cat llvm-release.txt)"
+[ ! -f llvm-project-"$LLVM_RELEASE".src.tar.xz ] && curl -O -L https://github.com/llvm/llvm-project/releases/download/llvmorg-"$LLVM_RELEASE"/llvm-project-"$LLVM_RELEASE".src.tar.xz
+[ "$(shasum -a 512 llvm-project-"$LLVM_RELEASE".src.tar.xz)" != "$(cat checksum.txt)" ] && exit 1
 mkdir final
-tar -xf llvm-project-16.0.0.src.tar.xz
-mv llvm-project-16.0.0.src final/llvm-project
+tar -xf llvm-project-"$LLVM_RELEASE".src.tar.xz
+mv llvm-project-"$LLVM_RELEASE".src final/llvm-project
