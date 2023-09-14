@@ -1,0 +1,11 @@
+--- a/test-release.sh
++++ b/test-release.sh
+@@ -549,7 +549,7 @@ function package_release() {
+     if [ "$use_gzip" = "yes" ]; then
+       tar cf - $Package | gzip -9c > $BuildDir/$Package.tar.gz
+     else
+-      tar cf - $Package | xz -9ce -T $NumJobs > $BuildDir/$Package.tar.xz
++      tar -c -J --options 'compression-level=9' -f $BuildDir/$Package.tar.xz $Package
+     fi
+     mv $Package llvmCore-$Release-$RC.install/usr/local
+     cd $cwd
