@@ -1,0 +1,86 @@
+name: Build, package and release clang+llvm
+
+on:
+  workflow_call:
+    inputs:
+      arch:
+        required: true
+        type: string
+      os:
+        required: true
+        type: string
+
+jobs:
+  stage1:
+    name: Build stage 1
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
+      - name: Prepare for building
+        run: ./initialize.sh
+      - name: Build
+        run: ./build.sh ${{ inputs.arch }} stage1
+      - name: Upload build directory
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_directory
+          path: build_directory.tar
+
+  stage2:
+    name: Build stage 2
+    runs-on: ${{ inputs.os }}
+    needs: stage1
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
+      - name: Download build directory
+        uses: actions/download-artifact@v3
+        with:
+            name: build_directory
+      - name: Build
+        run: ./build.sh ${{ inputs.arch }} stage2
+      - name: Upload build directory
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_directory
+          path: build_directory.tar
+
+  stage3:
+    name: Build and release stage 3
+    runs-on: ${{ inputs.os }}
+    needs: stage2
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone repository
+      - name: Uninstall Homebrew
+        run: ./uninstall-homebrew.sh
+      - name: Download build directory
+        uses: actions/download-artifact@v3
+        with:
+            name: build_directory
+      - name: Build
+        id: bake
+        run: ./build.sh ${{ inputs.arch }} stage3
+      - name: Upload tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.bake.outputs.file_name }}
+          path: ./output/${{ steps.bake.outputs.file_name }}
+      - name: Create release
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.bake.outputs.release_tag_version }}
+          body_path: ./github_release_text.md
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ./output/${{ steps.bake.outputs.file_name }}
