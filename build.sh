@@ -14,10 +14,10 @@ if [ "$2" != "stage3" ]; then
 fi
 _release_tag_version="$LLVM_RELEASE"-"$1"
 [ "$(cat revision.txt)" -ne 0 ] && _release_tag_version="$_release_tag_version"-"$(cat revision.txt)"
-echo "file_name=clang+llvm-$LLVM_RELEASE-x86-64-apple-darwin21.0.tar.xz" >> $GITHUB_OUTPUT
+echo "file_name=clang+llvm-$LLVM_RELEASE-$1-apple-darwin21.0.tar.xz" >> $GITHUB_OUTPUT
 echo "release_tag_version=$_release_tag_version" >> $GITHUB_OUTPUT
 printf 'SHA512 checksum:\n<code>' > github_release_text.md
-printf "$(shasum -a 512 final/clang+llvm-"$LLVM_RELEASE"-x86-64-apple-darwin21.0.tar.xz | sed 's,final/,,' | sed 's, ,\&nbsp;,g')" >> github_release_text.md
+printf "$(shasum -a 512 final/clang+llvm-"$LLVM_RELEASE"-$1-apple-darwin21.0.tar.xz | sed 's,final/,,' | sed 's, ,\&nbsp;,g')" >> github_release_text.md
 printf '</code>\n' >> github_release_text.md
 mkdir output
-mv final/clang+llvm-"$LLVM_RELEASE"-x86-64-apple-darwin21.0.tar.xz output/
+mv final/clang+llvm-"$LLVM_RELEASE"-"$1"-apple-darwin21.0.tar.xz output/
