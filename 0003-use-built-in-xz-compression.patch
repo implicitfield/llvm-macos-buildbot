@@ -1,6 +1,6 @@
 --- a/test-release.sh
 +++ b/test-release.sh
-@@ -555,7 +555,7 @@ function package_release() {
+@@ -631,7 +631,7 @@ function package_release() {
      if [ "$use_gzip" = "yes" ]; then
        tar cf - $Package | gzip -9c > $BuildDir/$Package.tar.gz
      else

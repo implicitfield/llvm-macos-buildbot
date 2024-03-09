@@ -1,6 +1,6 @@
 --- a/test-release.sh
 +++ b/test-release.sh
-@@ -655,13 +655,6 @@ for Flavor in $Flavors ; do
+@@ -737,13 +737,6 @@ for Flavor in $Flavors ; do
          $llvmCore_phase3_objdir $llvmCore_phase3_destdir
      clean_RPATH $llvmCore_phase3_destdir/usr/local
  
