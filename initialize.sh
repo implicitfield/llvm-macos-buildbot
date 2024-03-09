@@ -5,3 +5,4 @@ LLVM_RELEASE="$(cat llvm-release.txt)"
 mkdir final
 tar -xf llvm-project-"$LLVM_RELEASE".src.tar.xz
 mv llvm-project-"$LLVM_RELEASE".src final/llvm-project
+patch -p1 -R -d final/llvm-project < 4dec62f4d4a0a496a8067e283bf66897fbf6e598.patch
