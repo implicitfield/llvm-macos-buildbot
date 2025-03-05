@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
@@ -25,9 +25,9 @@ jobs:
       - name: Build
         run: ./build.sh ${{ inputs.arch }} stage1
       - name: Upload build directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build_directory
+          name: build_directory_${{ inputs.arch }}
           path: build_directory.tar
 
   stage2:
@@ -36,21 +36,22 @@ jobs:
     needs: stage1
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
       - name: Download build directory
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-            name: build_directory
+            name: build_directory_${{ inputs.arch }}
       - name: Build
         run: ./build.sh ${{ inputs.arch }} stage2
       - name: Upload build directory
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: build_directory
+          name: build_directory_${{ inputs.arch }}
           path: build_directory.tar
+          overwrite: true
 
   stage3:
     name: Build and release stage 3
@@ -58,25 +59,25 @@ jobs:
     needs: stage2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
       - name: Download build directory
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-            name: build_directory
+            name: build_directory_${{ inputs.arch }}
       - name: Build
         id: bake
         run: ./build.sh ${{ inputs.arch }} stage3
       - name: Upload tarball
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.bake.outputs.file_name }}
           path: ./output/${{ steps.bake.outputs.file_name }}
       - name: Create release
         if: ${{ github.event_name != 'pull_request' }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.bake.outputs.release_tag_version }}
           body_path: ./github_release_text.md
