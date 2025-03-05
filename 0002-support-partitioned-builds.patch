@@ -29,7 +29,7 @@
          -help | --help | -h | --h | -\? )
              usage
              exit 0
-@@ -673,6 +688,7 @@ for Flavor in $Flavors ; do
+@@ -672,6 +687,7 @@ for Flavor in $Flavors ; do
      echo "********************************************************************************"
      echo "  Release:     $Release-$RC"
      echo "  Build:       $Flavor"
@@ -37,7 +37,7 @@
      echo "  System Info: "
      echo "    `uname -a`"
      echo "********************************************************************************"
-@@ -691,6 +707,7 @@ for Flavor in $Flavors ; do
+@@ -690,6 +706,7 @@ for Flavor in $Flavors ; do
      llvmCore_phase3_objdir=$BuildDir/Phase3/$Flavor/llvmCore-$Release-$RC.obj
      llvmCore_phase3_destdir=$BuildDir/Phase3/$Flavor/llvmCore-$Release-$RC.install
  
@@ -45,7 +45,7 @@
      rm -rf $llvmCore_phase1_objdir
      rm -rf $llvmCore_phase1_destdir
  
-@@ -716,7 +733,13 @@ for Flavor in $Flavors ; do
+@@ -715,7 +732,13 @@ for Flavor in $Flavors ; do
      build_llvmCore 1 $Flavor \
          $llvmCore_phase1_objdir $llvmCore_phase1_destdir
      clean_RPATH $llvmCore_phase1_destdir/usr/local
@@ -59,7 +59,7 @@
      ########################################################################
      # Phase 2: Build llvmCore with newly built clang from phase 1.
      c_compiler=$llvmCore_phase1_destdir/usr/local/bin/clang
-@@ -726,6 +749,11 @@ for Flavor in $Flavors ; do
+@@ -725,6 +748,11 @@ for Flavor in $Flavors ; do
      build_llvmCore 2 $Flavor \
          $llvmCore_phase2_objdir $llvmCore_phase2_destdir
      clean_RPATH $llvmCore_phase2_destdir/usr/local
@@ -71,7 +71,7 @@
  
      ########################################################################
      # Phase 3: Build llvmCore with newly built clang from phase 2.
-@@ -760,6 +788,10 @@ done
+@@ -759,6 +787,10 @@ done
  
  ) 2>&1 | tee $LogDir/testing.$Release-$RC.log
  
