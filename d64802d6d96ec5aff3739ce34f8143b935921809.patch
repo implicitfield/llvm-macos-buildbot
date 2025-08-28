@@ -1,0 +1,173 @@
+--- a/lldb/cmake/modules/LLDBFramework.cmake
++++ b/lldb/cmake/modules/LLDBFramework.cmake
+@@ -70,33 +70,6 @@ endif()
+ 
+ find_program(unifdef_EXECUTABLE unifdef)
+ 
+-# All necessary header files will be staged in the include directory in the build directory,
+-# so just copy the files from there into the framework's staging directory.
+-set(lldb_build_dir_header_staging "${CMAKE_BINARY_DIR}/include/lldb")
+-set(lldb_framework_header_staging "${CMAKE_CURRENT_BINARY_DIR}/FrameworkHeaders")
+-file(GLOB lldb_build_dir_header_staging_list ${lldb_build_dir_header_staging}/*)
+-foreach(header ${lldb_build_dir_header_staging_list})
+-
+-  get_filename_component(basename ${header} NAME)
+-  set(staged_header ${lldb_framework_header_staging}/${basename})
+-
+-  if(unifdef_EXECUTABLE)
+-    # unifdef returns 0 when the file is unchanged and 1 if something was changed.
+-    # That means if we successfully remove SWIG code, the build system believes
+-    # that the command has failed and stops. This is undesirable.
+-    set(copy_command ${unifdef_EXECUTABLE} -USWIG -o ${staged_header} ${header} || (exit 0))
+-  else()
+-    set(copy_command ${CMAKE_COMMAND} -E copy ${header} ${staged_header})
+-  endif()
+-
+-  add_custom_command(
+-    DEPENDS ${header} OUTPUT ${staged_header}
+-    COMMAND ${copy_command}
+-    COMMENT "LLDB.framework: collect framework header and remove SWIG macros")
+-
+-  list(APPEND lldb_staged_headers ${staged_header})
+-endforeach()
+-
+ # Wrap output in a target, so lldb-framework can depend on it.
+ add_custom_target(liblldb-resource-headers DEPENDS lldb-sbapi-dwarf-enums ${lldb_staged_headers})
+ set_target_properties(liblldb-resource-headers PROPERTIES FOLDER "LLDB/Resources")
+@@ -105,22 +78,6 @@ set_target_properties(liblldb-resource-headers PROPERTIES FOLDER "LLDB/Resources
+ add_dependencies(liblldb-resource-headers liblldb-header-staging)
+ add_dependencies(liblldb liblldb-resource-headers)
+ 
+-# Take the headers from the staging directory and fix up their includes for the framework.
+-# Then write them to the output directory.
+-# Also, run unifdef to remove any specified guards from the header files.
+-file(GLOB lldb_framework_header_staging_list ${lldb_framework_header_staging}/*)
+-foreach(header ${lldb_framework_header_staging_list})
+-
+-  set(input_header ${header})
+-  get_filename_component(header_basename ${input_header} NAME)
+-  set(output_header $<TARGET_FILE_DIR:liblldb>/Headers/${header_basename})
+-
+-  add_custom_command(TARGET liblldb POST_BUILD
+-    COMMAND ${LLDB_SOURCE_DIR}/scripts/framework-header-fix.py -f lldb_main -i ${input_header} -o ${output_header} -p ${unifdef_EXECUTABLE} USWIG
+-    COMMENT "LLDB.framework: Fix up and copy framework headers"
+-  )
+-endforeach()
+-
+ # Copy vendor-specific headers from clang (without staging).
+ if(NOT APPLE_EMBEDDED)
+   if (TARGET clang-resource-headers)
+--- a/lldb/scripts/framework-header-fix.py
++++ b/lldb/scripts/framework-header-fix.py
+@@ -97,7 +97,7 @@ def main():
+     parser.add_argument("-o", "--output_file")
+     parser.add_argument("-p", "--unifdef_path")
+     parser.add_argument(
+-        "unifdef_guards",
++        "--unifdef_guards",
+         nargs="+",
+         type=str,
+         help="Guards to be removed with unifdef. These must be specified in the same way as they would be when passed directly into unifdef.",
+@@ -111,7 +111,8 @@ def main():
+     # unifdef takes the guards to remove as arguments in their own right (e.g. -USWIG)
+     # but passing them in with dashes for this script causes argparse to think that they're
+     # arguments in and of themself, so they need to passed in without dashes.
+-    unifdef_guards = ["-" + guard for guard in args.unifdef_guards]
++    if args.unifdef_guards:
++        unifdef_guards = ["-" + guard for guard in args.unifdef_guards]
+ 
+     # Create the framework's header dir if it doesn't already exist
+     if not os.path.exists(os.path.dirname(output_file_path)):
+@@ -123,7 +124,8 @@ def main():
+         modify_rpc_includes(input_file_path, output_file_path)
+     # After the incldues have been modified, run unifdef on the headers to remove any guards
+     # specified at the command line.
+-    remove_guards(output_file_path, unifdef_path, unifdef_guards)
++    if args.unifdef_guards:
++        remove_guards(output_file_path, unifdef_path, unifdef_guards)
+ 
+ 
+ if __name__ == "__main__":
+--- a/lldb/scripts/version-header-fix.py
++++ b/lldb/scripts/version-header-fix.py
+@@ -29,6 +29,10 @@ def main():
+     input_path = str(args.input_path)
+     output_path = str(args.output_path)
+ 
++    # Create the output dir if it doesn't already exist
++    if not os.path.exists(os.path.dirname(output_path)):
++        os.makedirs(os.path.dirname(output_path))
++
+     with open(input_path, "r") as input_file:
+         lines = input_file.readlines()
+         file_buffer = "".join(lines)
+--- a/lldb/source/API/CMakeLists.txt
++++ b/lldb/source/API/CMakeLists.txt
+@@ -295,12 +295,21 @@ endif()
+ # Stage all headers in the include directory in the build dir.
+ file(GLOB public_headers ${LLDB_SOURCE_DIR}/include/lldb/API/*.h)
+ set(lldb_header_staging_dir ${CMAKE_BINARY_DIR}/include/lldb)
++set(generated_public_headers ${LLDB_OBJ_DIR}/include/lldb/API/SBLanguages.h)
+ file(GLOB root_public_headers ${LLDB_SOURCE_DIR}/include/lldb/lldb-*.h)
+ file(GLOB root_private_headers ${LLDB_SOURCE_DIR}/include/lldb/lldb-private*.h)
+ list(REMOVE_ITEM root_public_headers ${root_private_headers})
+ 
+ find_program(unifdef_EXECUTABLE unifdef)
+ 
++add_custom_target(liblldb-header-staging DEPENDS ${lldb_staged_headers} ${lldb_header_staging_dir}/lldb-defines.h)
++
++if (LLDB_BUILD_FRAMEWORK)
++  add_custom_target(lldb-framework-fixup-all-headers)
++  add_dependencies(lldb-framework-fixup-all-headers liblldb-header-staging)
++  add_dependencies(liblldb lldb-framework-fixup-all-headers)
++endif()
++
+ foreach(header
+     ${public_headers}
+     ${generated_public_headers}
+@@ -323,12 +332,23 @@ foreach(header
+     COMMENT "LLDB headers: stage LLDB headers in include directory")
+ 
+   list(APPEND lldb_staged_headers ${staged_header})
++
++  if (LLDB_BUILD_FRAMEWORK)
++    set(output_header $<TARGET_FILE_DIR:liblldb>/Headers/${basename})
++
++    add_custom_target(lldb-framework-fixup-header-${basename} DEPENDS ${staged_header})
++    add_dependencies(lldb-framework-fixup-all-headers lldb-framework-fixup-header-${basename})
++
++    add_custom_command(TARGET lldb-framework-fixup-header-${basename} POST_BUILD
++      COMMAND "${Python3_EXECUTABLE}" ${LLDB_SOURCE_DIR}/scripts/framework-header-fix.py -f lldb_main -i ${staged_header} -o ${output_header}
++      COMMENT "LLDB.framework: Fix up and copy framework headers"
++    )
++  endif()
+ endforeach()
+ 
+-add_custom_command(TARGET liblldb POST_BUILD
++add_custom_command(TARGET liblldb-header-staging POST_BUILD
+   COMMAND "${Python3_EXECUTABLE}" ${LLDB_SOURCE_DIR}/scripts/version-header-fix.py -i ${LLDB_SOURCE_DIR}/include/lldb/lldb-defines.h -o ${lldb_header_staging_dir}/lldb-defines.h -m ${LLDB_VERSION_MAJOR} -n ${LLDB_VERSION_MINOR} -p ${LLDB_VERSION_PATCH}
+ )
+-add_custom_target(liblldb-header-staging DEPENDS ${lldb_staged_headers})
+ add_dependencies(liblldb liblldb-header-staging)
+ 
+ if(LLDB_BUILD_FRAMEWORK)
+--- a/lldb/test/Shell/Scripts/TestFrameworkFixScript.test
++++ b/lldb/test/Shell/Scripts/TestFrameworkFixScript.test
+@@ -1,6 +1,6 @@
+ # Create a temp dir for output and run the framework fix script on the truncated version of SBAddress.h in the inputs dir.
+ RUN: mkdir -p %t/Outputs
+-RUN: %python %p/../../../scripts/framework-header-fix.py -f lldb_main -i %p/Inputs/Main/SBAddress.h -o %t/Outputs/SBAddress.h -p /usr/bin/unifdef USWIG
++RUN: %python %p/../../../scripts/framework-header-fix.py -f lldb_main -i %p/Inputs/Main/SBAddress.h -o %t/Outputs/SBAddress.h -p /usr/bin/unifdef --unifdef_guards USWIG
+ 
+ # Check the output
+ RUN: cat %t/Outputs/SBAddress.h | FileCheck %s
+--- a/lldb/test/Shell/Scripts/TestRPCFrameworkFixScript.test
++++ b/lldb/test/Shell/Scripts/TestRPCFrameworkFixScript.test
+@@ -1,6 +1,6 @@
+ # Create a temp dir for output and run the framework fix script on the truncated version of SBAddress.h in the inputs dir.
+ RUN: mkdir -p %t/Outputs
+-RUN: %python %p/../../../scripts/framework-header-fix.py -f lldb_rpc -i %p/Inputs/RPC/RPCSBAddress.h -o %t/Outputs/RPCSBAddress.h -p /usr/bin/unifdef USWIG
++RUN: %python %p/../../../scripts/framework-header-fix.py -f lldb_rpc -i %p/Inputs/RPC/RPCSBAddress.h -o %t/Outputs/RPCSBAddress.h -p /usr/bin/unifdef --unifdef_guards USWIG
+ 
+ # Check the output
+ RUN: cat %t/Outputs/RPCSBAddress.h | FileCheck %s
