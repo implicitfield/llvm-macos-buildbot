@@ -7,6 +7,7 @@ curl -O https://raw.githubusercontent.com/Homebrew/install/de786ec51ca86d12de92a
 chmod +x uninstall.sh
 sudo ./uninstall.sh --force
 
+sudo rm -rf /opt/homebrew
 sudo rm -rf /usr/local/Homebrew
 sudo rm -rf /usr/local/Caskroom
 sudo rm -rf /usr/local/bin/brew
