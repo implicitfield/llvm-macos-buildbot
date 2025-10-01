@@ -12,12 +12,10 @@ jobs:
   build:
     strategy:
       matrix:
-        arch: [x86-64, arm64]
-        os: [macos-13, macos-14]
-        exclude:
-          - os: macos-13
+        include:
+          - os: macos-15
             arch: arm64
-          - os: macos-14
+          - os: macos-15-intel
             arch: x86-64
       fail-fast: true
       max-parallel: 2
