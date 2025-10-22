@@ -1,5 +1,5 @@
 #!/bin/sh
-LLVM_RELEASE="21.1.3"
+LLVM_RELEASE="$(cat llvm-release.txt)"
 if [ "$2" != "stage1" ]; then
     tar -xf build_directory.tar
 fi
