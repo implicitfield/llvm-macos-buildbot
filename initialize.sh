@@ -6,7 +6,5 @@ LLVM_RELEASE="$(cat llvm-release.txt)"
 mkdir final
 tar -xf llvm-project-"$LLVM_RELEASE".src.tar.xz
 mv llvm-project-"$LLVM_RELEASE".src final/llvm-project
-# llvm/llvm-project/issues/155532
-patch -p1 -d final/llvm-project < d64802d6d96ec5aff3739ce34f8143b935921809.patch
 # llvm/llvm-project/issues/127764
-patch -p1 -d final/llvm-project < add-rtsan-libcxx-dependency.patch
+patch -p1 -d final/llvm-project < 46de3200388c300ee871f5b4941dff0d97ba9480.patch
