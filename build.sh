@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 LLVM_RELEASE="$(cat llvm-release.txt)"
 if [ "$2" != "stage1" ]; then
     tar -xf build_directory.tar
