@@ -20,6 +20,8 @@ jobs:
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
+      - name: Install dependencies
+        run: ./install-dependencies.sh
       - name: Prepare for building
         run: ./initialize.sh
       - name: Build
@@ -40,6 +42,8 @@ jobs:
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
+      - name: Install dependencies
+        run: ./install-dependencies.sh
       - name: Download build directory
         uses: actions/download-artifact@v4
         with:
@@ -63,6 +67,8 @@ jobs:
         name: Clone repository
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
+      - name: Install dependencies
+        run: ./install-dependencies.sh
       - name: Download build directory
         uses: actions/download-artifact@v4
         with:
