@@ -27,10 +27,11 @@ jobs:
       - name: Build
         run: ./build.sh ${{ inputs.arch }} stage1
       - name: Upload build directory
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build_directory_${{ inputs.arch }}
-          path: build_directory.tar
+          path: build_directory.tar.gz
+          archive: false
 
   stage2:
     name: Build stage 2
@@ -45,17 +46,18 @@ jobs:
       - name: Install dependencies
         run: ./install-dependencies.sh
       - name: Download build directory
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
             name: build_directory_${{ inputs.arch }}
       - name: Build
         run: ./build.sh ${{ inputs.arch }} stage2
       - name: Upload build directory
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build_directory_${{ inputs.arch }}
-          path: build_directory.tar
+          path: build_directory.tar.gz
           overwrite: true
+          archive: false
 
   stage3:
     name: Build and release stage 3
@@ -70,17 +72,18 @@ jobs:
       - name: Install dependencies
         run: ./install-dependencies.sh
       - name: Download build directory
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
             name: build_directory_${{ inputs.arch }}
       - name: Build
         id: bake
         run: ./build.sh ${{ inputs.arch }} stage3
       - name: Upload tarball
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.bake.outputs.file_name }}
           path: ./output/${{ steps.bake.outputs.file_name }}
+          archive: false
       - name: Create release
         if: ${{ github.event_name != 'pull_request' }}
         uses: softprops/action-gh-release@v2
