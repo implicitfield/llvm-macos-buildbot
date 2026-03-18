@@ -5,9 +5,9 @@ if [ "$2" != "stage1" ]; then
     tar -xf build_directory.tar.gz
 fi
 cp final/llvm-project/llvm/utils/release/test-release.sh .
-patch -p1 < 0001-skip-tests.patch
-patch -p1 < 0002-support-partitioned-builds.patch
-patch -p1 < 0003-use-built-in-xz-compression.patch
+patch -p1 < patches/0001-skip-tests.patch
+patch -p1 < patches/0002-support-partitioned-builds.patch
+patch -p1 < patches/0003-use-built-in-xz-compression.patch
 ./test-release.sh -release "$LLVM_RELEASE" -final -triple "$1"-apple-darwin24.0 -no-checkout -no-clang-tools -no-test-suite -no-openmp -no-polly -no-mlir -no-flang -no-compare-files -use-ninja -configure-flags -DLLVM_APPEND_VC_REV=OFF -"$2"
 if [ "$2" != "stage3" ]; then
     tar -cf - final | gzip -1 > build_directory.tar.gz
