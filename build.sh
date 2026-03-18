@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-LLVM_RELEASE="$(cat llvm-release.txt)"
+LLVM_RELEASE="$(./fetch_dependencies.py downloads.ini -v LLVM)"
 if [ "$2" != "stage1" ]; then
     tar -xf build_directory.tar.gz
 fi
@@ -14,7 +14,8 @@ if [ "$2" != "stage3" ]; then
     exit 0
 fi
 _release_tag_version="$LLVM_RELEASE"-"$1"
-[ "$(cat revision.txt)" -ne 0 ] && _release_tag_version="$_release_tag_version"-"$(cat revision.txt)"
+REVISION="$(cat revision.txt)"
+[ "$REVISION" -ne 0 ] && _release_tag_version="$_release_tag_version"-"$REVISION"
 echo "file_name=clang+llvm-$LLVM_RELEASE-$1-apple-darwin24.0.tar.xz" >> $GITHUB_OUTPUT
 echo "release_tag_version=$_release_tag_version" >> $GITHUB_OUTPUT
 printf 'SHA512 checksum:\n<code>' > github_release_text.md
