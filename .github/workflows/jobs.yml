@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Clone repository
+      - name: Move scripts to repository root
+        run: mv scripts/* .
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
       - name: Install dependencies
@@ -41,6 +43,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Clone repository
+      - name: Move scripts to repository root
+        run: mv scripts/* .
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
       - name: Install dependencies
@@ -67,6 +71,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Clone repository
+      - name: Move scripts to repository root
+        run: mv scripts/* .
       - name: Uninstall Homebrew
         run: ./uninstall-homebrew.sh
       - name: Install dependencies
